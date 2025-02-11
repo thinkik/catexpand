@@ -148,10 +148,10 @@
             <input type="text" id="ind2" name="ind2" placeholder="z. B. 0, 4 oder leer">
 
             <label for="fieldValue">Eingabe Unterfelder:</label>
-            <textarea id="fieldValue" name="fieldValue" placeholder="z. B. $$a $$2 gnd" required aria-required="true" rows="4"></textarea>
+            <textarea id="fieldValue" name="fieldValue" placeholder="z. B. $$a Schulbuch$$2 gnd-content" required aria-required="true" rows="4"></textarea>
 
             <label for="extensionName">Name der Erweiterung:</label>
-            <input type="text" id="extensionName" name="extensionName" placeholder="z. B. 084 RVK">
+            <input type="text" id="extensionName" name="extensionName" placeholder="z. B. Schoolbook">
 
             <div class="button-group">
                 <button type="button" id="generateBtn">Erweiterung erstellen</button>
@@ -192,6 +192,28 @@
                 }, 3000);
             }
 
+            // Diese Funktion zerlegt den eingegebenen String in Unterfelder
+            function parseSubfields(input) {
+                const subfields = [];
+                input = input.trim();
+                // Falls der Input mit "$$" beginnt, entfernen wir diesen Teil
+                if (input.startsWith('$$')) {
+                    input = input.substring(2);
+                }
+                // Zerlegen an den "$$" Trennzeichen
+                const parts = input.split('$$');
+                parts.forEach(part => {
+                    part = part.trim();
+                    if (part.length > 0) {
+                        // Der erste Buchstabe ist der Unterfeld-Code, der Rest der Wert
+                        const code = part.charAt(0);
+                        const value = part.substring(1).trim();
+                        subfields.push({ code, value });
+                    }
+                });
+                return subfields;
+            }
+
             function generateExtension() {
                 const fieldNumber = marcForm.fieldNumber.value.trim();
                 const ind1 = marcForm.ind1.value.trim();
@@ -204,16 +226,25 @@
                     return;
                 }
 
-                if (!extensionName) {
-                    const code = fieldValue.split(' ')[0].replace('$$', '');
-                    extensionName = `add ${fieldNumber}_${ind1}${ind2}${fieldValue}`;
+                // Unterfelder parsen (erwartetes Format z. B.: $$a Schulbuch$$2 gnd-content)
+                const subfields = parseSubfields(fieldValue);
+                if (subfields.length === 0) {
+                    showAlert('Bitte geben Sie mindestens ein gültiges Unterfeld ein.', 'error');
+                    return;
                 }
 
-                const ruleName = `add ${fieldNumber}_${ind1}${ind2}${fieldValue}`;
+                // Regelname zusammenbauen, z. B.: add 655_7$$aSchulbuch$$2gnd-content
+                const subfieldString = subfields.map(sf => `$$${sf.code}${sf.value}`).join('');
+                const ruleName = `add ${fieldNumber}_${ind1}${ind2}${subfieldString}`;
+
+                // Falls kein Erweiterungsname eingegeben wurde, verwenden wir den Regellnamen
+                if (!extensionName) {
+                    extensionName = ruleName;
+                }
 
                 const outputData = {
                     template: {
-                        name: extensionName || fieldNumber,
+                        name: extensionName,
                         rules: [
                             {
                                 type: "AddDataFieldRule",
@@ -222,8 +253,7 @@
                                     tag: fieldNumber,
                                     ind1: ind1 || "",
                                     ind2: ind2 || "",
-                                    code: fieldValue.split(' ')[0].replace('$$', ''),
-                                    value: fieldValue.substring(fieldValue.indexOf(' ') + 1)
+                                    subfields: subfields
                                 }
                             }
                         ]
