@@ -63,6 +63,17 @@ Aus diesen Eingaben wird ein JSON-Objekt generiert, welches als Vorlage für MAR
 - Die Logik zur Erzeugung der JSON-Struktur kann im Skript entsprechend erweitert oder angepasst werden.
 - Die Felder können um weitere MARC-spezifische Eingabehilfen ergänzt werden.
 
+## Tests
+
+1. Stelle sicher, dass [Node.js](https://nodejs.org/) installiert ist.
+2. Führe im Repository den folgenden Befehl aus:
+
+   ```bash
+   node tests/run-tests.js
+   ```
+
+   Die Ausgaben zeigen, ob alle Tests erfolgreich waren.
+
 ## Lizenz
 
 GPL-3.0 license 

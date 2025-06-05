@@ -169,6 +169,7 @@
         <pre id="fullFieldPreview" aria-live="polite"></pre>
     </div>
 
+    <script src="parseSubfields.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const marcForm = document.getElementById('marcForm');
@@ -192,27 +193,6 @@
                 }, 3000);
             }
 
-            // Diese Funktion zerlegt den eingegebenen String in Unterfelder
-            function parseSubfields(input) {
-                const subfields = [];
-                input = input.trim();
-                // Falls der Input mit "$$" beginnt, entfernen wir diesen Teil
-                if (input.startsWith('$$')) {
-                    input = input.substring(2);
-                }
-                // Zerlegen an den "$$" Trennzeichen
-                const parts = input.split('$$');
-                parts.forEach(part => {
-                    part = part.trim();
-                    if (part.length > 0) {
-                        // Der erste Buchstabe ist der Unterfeld-Code, der Rest der Wert
-                        const code = part.charAt(0);
-                        const value = part.substring(1).trim();
-                        subfields.push({ code, value });
-                    }
-                });
-                return subfields;
-            }
 
             function generateExtension() {
                 const fieldNumber = marcForm.fieldNumber.value.trim();
