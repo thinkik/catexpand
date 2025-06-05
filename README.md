@@ -57,6 +57,15 @@ Aus diesen Eingaben wird ein JSON-Objekt generiert, welches als Vorlage für MAR
 4. Nutzen Sie den **"In Zwischenablage speichern"**-Button, um die generierte Erweiterung zu kopieren.
 5. Mit **"Neue Erweiterung erstellen"** setzen Sie das Formular zurück, um eine weitere Erweiterung anzulegen.
 
+## Tests
+
+Um die automatischen Tests auszuführen, wird Node.js benötigt.
+Im Verzeichnis `tests` befindet sich ein einfaches Testskript. Die Tests starten Sie mit:
+
+```
+node tests/run-tests.js
+```
+
 ## Anpassungen und Erweiterungen
 
 - Die CSS-Variablen im `:root`-Block ermöglichen schnelle Farbanpassungen.
