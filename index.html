@@ -204,8 +204,8 @@
                 const parts = input.split('$$');
                 parts.forEach(part => {
                     part = part.trim();
-                    if (part.length > 0) {
-                        // Der erste Buchstabe ist der Unterfeld-Code, der Rest der Wert
+                    // Nur gültige Unterfelder (mind. Code + Wert) übernehmen
+                    if (part.length > 1) {
                         const code = part.charAt(0);
                         const value = part.substring(1).trim();
                         subfields.push({ code, value });
