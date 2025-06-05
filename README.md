@@ -65,5 +65,6 @@ Aus diesen Eingaben wird ein JSON-Objekt generiert, welches als Vorlage für MAR
 
 ## Lizenz
 
-GPL-3.0 license 
-Die Nutzung des Codes und der Webseite ist frei. Bitte beachten Sie, dass für den Einsatz in produktiven Umgebungen ggf. Anpassungen an den generierten Regeln notwendig sind.
+GPL-3.0 license
+
+Die Nutzung des Codes und der Webseite ist frei. Den vollständigen Text der Lizenz finden Sie in der Datei `LICENSE` dieses Repositories, die die GPL-3.0 in voller Länge enthält. Bitte beachten Sie, dass für den Einsatz in produktiven Umgebungen ggf. Anpassungen an den generierten Regeln notwendig sind.
