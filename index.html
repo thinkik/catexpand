@@ -14,6 +14,14 @@
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        body.dark {
+            --primary-color: #90caf9;
+            --secondary-color: #333;
+            --button-color: #90caf9;
+            --button-hover-color: #64b5f6;
+            --error-color: #ef9a9a;
+        }
+
         body {
             font-family: var(--font-family);
             background-color: var(--secondary-color);
@@ -123,6 +131,12 @@
             color: #721c24;
         }
 
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.9em;
+            display: none;
+        }
+
         @media (max-width: 600px) {
             .button-group {
                 flex-direction: column;
@@ -137,21 +151,29 @@
 <body>
     <div class="container">
         <h1>CatExpand Erweiterung</h1>
+        <div class="button-group" style="justify-content:flex-end;">
+            <button type="button" id="themeToggle">Dark Mode</button>
+        </div>
         <form id="marcForm" novalidate>
             <label for="fieldNumber">Für welches Feld soll eine Erweiterung erstellt werden?</label>
-            <input type="text" id="fieldNumber" name="fieldNumber" placeholder="Feldnummer eingeben" required aria-required="true">
+            <input type="text" id="fieldNumber" name="fieldNumber" placeholder="Feldnummer eingeben" required aria-required="true" title="Drei- oder vierstellige Feldnummer, z. B. 650">
+            <span class="error-message" id="fieldNumberError"></span>
 
             <label for="ind1">Erster Indikator:</label>
-            <input type="text" id="ind1" name="ind1" placeholder="z. B. 0, 1, 2 oder leer lassen">
+            <input type="text" id="ind1" name="ind1" placeholder="z. B. 0, 1, 2 oder leer lassen" title="Optionaler erster Indikator (ein Zeichen)">
+            <span class="error-message" id="ind1Error"></span>
 
             <label for="ind2">Zweiter Indikator:</label>
-            <input type="text" id="ind2" name="ind2" placeholder="z. B. 0, 4 oder leer lassen">
+            <input type="text" id="ind2" name="ind2" placeholder="z. B. 0, 4 oder leer lassen" title="Optionaler zweiter Indikator (ein Zeichen)">
+            <span class="error-message" id="ind2Error"></span>
 
             <label for="fieldValue">Eingabe Unterfelder:</label>
-            <textarea id="fieldValue" name="fieldValue" placeholder="z. B. $$a Schlagwort $$2 gnd" required aria-required="true" rows="4"></textarea>
+            <textarea id="fieldValue" name="fieldValue" placeholder="z. B. $$a Schlagwort $$2 gnd" required aria-required="true" rows="4" title="Unterfelder im Format $$a Text $$2 Code"></textarea>
+            <span class="error-message" id="fieldValueError"></span>
 
             <label for="extensionName">Name der Erweiterung:</label>
-            <input type="text" id="extensionName" name="extensionName" placeholder="z. B. 650 Sachschlagwort">
+            <input type="text" id="extensionName" name="extensionName" placeholder="z. B. 650 Sachschlagwort" title="Optionaler Name für die Erweiterung">
+            <span class="error-message" id="extensionNameError"></span>
 
             <div class="button-group">
                 <button type="button" id="generateBtn">Erweiterung erstellen</button>
@@ -167,6 +189,15 @@
 
         <h2>Vorschau:</h2>
         <pre id="fullFieldPreview" aria-live="polite"></pre>
+
+        <h2>Gespeicherte Vorlagen:</h2>
+        <select id="templateList">
+            <option value="">Vorlage wählen ...</option>
+        </select>
+        <div class="button-group">
+            <button type="button" id="loadTemplateBtn">Vorlage laden</button>
+            <button type="button" id="saveTemplateBtn" disabled>Vorlage speichern</button>
+        </div>
     </div>
 
     <script src="parseSubfields.js"></script>
@@ -176,6 +207,10 @@
             const generateBtn = document.getElementById('generateBtn');
             const copyBtn = document.getElementById('copyBtn');
             const resetBtn = document.getElementById('resetBtn');
+            const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+            const loadTemplateBtn = document.getElementById('loadTemplateBtn');
+            const templateList = document.getElementById('templateList');
+            const themeToggle = document.getElementById('themeToggle');
             const output = document.getElementById('output');
             const fullFieldPreview = document.getElementById('fullFieldPreview');
             const alertBox = document.getElementById('alertBox');
@@ -183,6 +218,18 @@
             generateBtn.addEventListener('click', generateExtension);
             copyBtn.addEventListener('click', copyToClipboard);
             resetBtn.addEventListener('click', resetForm);
+            saveTemplateBtn.addEventListener('click', saveTemplate);
+            loadTemplateBtn.addEventListener('click', loadSelectedTemplate);
+            themeToggle.addEventListener('click', toggleTheme);
+
+            marcForm.fieldNumber.addEventListener('input', validateForm);
+            marcForm.ind1.addEventListener('input', validateForm);
+            marcForm.ind2.addEventListener('input', validateForm);
+            marcForm.fieldValue.addEventListener('input', () => { validateForm(); updatePreview(); });
+            marcForm.extensionName.addEventListener('input', validateForm);
+
+            loadTemplates();
+            updatePreview();
 
             function showAlert(message, type = 'success') {
                 alertBox.textContent = message;
@@ -195,6 +242,10 @@
 
 
             function generateExtension() {
+                if (!validateForm()) {
+                    showAlert('Bitte korrigieren Sie die Fehler im Formular.', 'error');
+                    return;
+                }
                 const fieldNumber = marcForm.fieldNumber.value.trim();
                 const ind1 = marcForm.ind1.value.trim();
                 const ind2 = marcForm.ind2.value.trim();
@@ -242,10 +293,10 @@
 
                 output.textContent = JSON.stringify(outputData, null, 4);
 
-                const fullField = `[${fieldNumber}] [${ind1 || " "}] [${ind2 || " "}] [${fieldValue}]`;
-                fullFieldPreview.textContent = fullField;
+                updatePreview();
 
                 copyBtn.disabled = false;
+                saveTemplateBtn.disabled = false;
                 showAlert('Erweiterung erfolgreich erstellt.');
             }
 
@@ -267,7 +318,85 @@
                 output.textContent = '';
                 fullFieldPreview.textContent = '';
                 copyBtn.disabled = true;
+                saveTemplateBtn.disabled = true;
                 showAlert('Formular zurückgesetzt.');
+            }
+
+            function updatePreview() {
+                const fieldNumber = marcForm.fieldNumber.value.trim();
+                const ind1 = marcForm.ind1.value.trim();
+                const ind2 = marcForm.ind2.value.trim();
+                const fieldValue = marcForm.fieldValue.value.trim();
+                const fullField = `[${fieldNumber}] [${ind1 || ' '}] [${ind2 || ' '}] [${fieldValue}]`;
+                fullFieldPreview.textContent = fullField;
+            }
+
+            function validateForm() {
+                let valid = true;
+                const fieldNumber = marcForm.fieldNumber.value.trim();
+                if (fieldNumber && !/^\d{3,4}$/.test(fieldNumber)) {
+                    document.getElementById('fieldNumberError').textContent = 'Ungültige Feldnummer';
+                    document.getElementById('fieldNumberError').style.display = 'block';
+                    valid = false;
+                } else {
+                    document.getElementById('fieldNumberError').style.display = 'none';
+                }
+                const subfields = parseSubfields(marcForm.fieldValue.value.trim());
+                if (marcForm.fieldValue.value.trim() && subfields.length === 0) {
+                    document.getElementById('fieldValueError').textContent = 'Ungültiges Unterfeldformat';
+                    document.getElementById('fieldValueError').style.display = 'block';
+                    valid = false;
+                } else {
+                    document.getElementById('fieldValueError').style.display = 'none';
+                }
+                saveTemplateBtn.disabled = !valid;
+                return valid;
+            }
+
+            function toggleTheme() {
+                document.body.classList.toggle('dark');
+            }
+
+            function saveTemplate() {
+                if (!validateForm()) return;
+                const template = {
+                    fieldNumber: marcForm.fieldNumber.value.trim(),
+                    ind1: marcForm.ind1.value.trim(),
+                    ind2: marcForm.ind2.value.trim(),
+                    fieldValue: marcForm.fieldValue.value.trim(),
+                    extensionName: marcForm.extensionName.value.trim()
+                };
+                const templates = JSON.parse(localStorage.getItem('marcTemplates') || '[]');
+                templates.push(template);
+                localStorage.setItem('marcTemplates', JSON.stringify(templates));
+                loadTemplates();
+                showAlert('Vorlage gespeichert.');
+            }
+
+            function loadTemplates() {
+                const templates = JSON.parse(localStorage.getItem('marcTemplates') || '[]');
+                templateList.innerHTML = '<option value="">Vorlage wählen ...</option>';
+                templates.forEach((tpl, idx) => {
+                    const option = document.createElement('option');
+                    option.value = idx;
+                    option.textContent = tpl.extensionName || `Vorlage ${idx+1}`;
+                    templateList.appendChild(option);
+                });
+            }
+
+            function loadSelectedTemplate() {
+                const templates = JSON.parse(localStorage.getItem('marcTemplates') || '[]');
+                const idx = templateList.value;
+                if (idx === '') return;
+                const tpl = templates[idx];
+                marcForm.fieldNumber.value = tpl.fieldNumber;
+                marcForm.ind1.value = tpl.ind1;
+                marcForm.ind2.value = tpl.ind2;
+                marcForm.fieldValue.value = tpl.fieldValue;
+                marcForm.extensionName.value = tpl.extensionName;
+                updatePreview();
+                validateForm();
+                showAlert('Vorlage geladen.');
             }
         });
     </script>
