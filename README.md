@@ -56,6 +56,7 @@ Aus diesen Eingaben wird ein JSON-Objekt generiert, welches als Vorlage für MAR
 3. Klicken Sie auf **"Erweiterung erstellen"**, um die JSON-Ausgabe zu erzeugen.
 4. Nutzen Sie den **"In Zwischenablage speichern"**-Button, um die generierte Erweiterung zu kopieren.
 5. Mit **"Neue Erweiterung erstellen"** setzen Sie das Formular zurück, um eine weitere Erweiterung anzulegen.
+6. Gespeicherte Vorlagen lassen sich über die Auswahlliste laden; die Erweiterung wird dabei automatisch erstellt und angezeigt.
 
 ## Tests
 
