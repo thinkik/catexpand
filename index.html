@@ -353,15 +353,44 @@
             function validateForm() {
                 let valid = true;
                 const fieldNumber = marcForm.fieldNumber.value.trim();
-                if (fieldNumber && !/^\d{3,4}$/.test(fieldNumber)) {
+                const ind1 = marcForm.ind1.value.trim();
+                const ind2 = marcForm.ind2.value.trim();
+                const fieldValue = marcForm.fieldValue.value.trim();
+
+                if (!fieldNumber) {
+                    document.getElementById('fieldNumberError').textContent = 'Feldnummer ist erforderlich';
+                    document.getElementById('fieldNumberError').style.display = 'block';
+                    valid = false;
+                } else if (!/^\d{3,4}$/.test(fieldNumber)) {
                     document.getElementById('fieldNumberError').textContent = 'Ungültige Feldnummer';
                     document.getElementById('fieldNumberError').style.display = 'block';
                     valid = false;
                 } else {
                     document.getElementById('fieldNumberError').style.display = 'none';
                 }
-                const subfields = parseSubfields(marcForm.fieldValue.value.trim());
-                if (marcForm.fieldValue.value.trim() && subfields.length === 0) {
+
+                if (ind1.length > 1) {
+                    document.getElementById('ind1Error').textContent = 'Der erste Indikator darf nur ein Zeichen enthalten';
+                    document.getElementById('ind1Error').style.display = 'block';
+                    valid = false;
+                } else {
+                    document.getElementById('ind1Error').style.display = 'none';
+                }
+
+                if (ind2.length > 1) {
+                    document.getElementById('ind2Error').textContent = 'Der zweite Indikator darf nur ein Zeichen enthalten';
+                    document.getElementById('ind2Error').style.display = 'block';
+                    valid = false;
+                } else {
+                    document.getElementById('ind2Error').style.display = 'none';
+                }
+
+                const subfields = parseSubfields(fieldValue);
+                if (!fieldValue) {
+                    document.getElementById('fieldValueError').textContent = 'Mindestens ein Unterfeld ist erforderlich';
+                    document.getElementById('fieldValueError').style.display = 'block';
+                    valid = false;
+                } else if (subfields.length === 0) {
                     document.getElementById('fieldValueError').textContent = 'Ungültiges Unterfeldformat';
                     document.getElementById('fieldValueError').style.display = 'block';
                     valid = false;
