@@ -231,6 +231,25 @@
             loadTemplates();
             updatePreview();
 
+            /**
+             * Verhindert hängenbleibende Browser-Tooltips auf "Tool entfernen" Buttons,
+             * wenn das Element direkt nach dem Klick aus dem DOM entfernt wird.
+             */
+            document.addEventListener('click', (event) => {
+                const removeToolElement = event.target.closest('[title="Tool entfernen"]');
+                if (!removeToolElement) return;
+
+                const originalTitle = removeToolElement.getAttribute('title');
+                removeToolElement.blur();
+                removeToolElement.removeAttribute('title');
+
+                requestAnimationFrame(() => {
+                    if (removeToolElement.isConnected && originalTitle) {
+                        removeToolElement.setAttribute('title', originalTitle);
+                    }
+                });
+            });
+
             function showAlert(message, type = 'success') {
                 alertBox.textContent = message;
                 alertBox.className = `alert ${type}`;
